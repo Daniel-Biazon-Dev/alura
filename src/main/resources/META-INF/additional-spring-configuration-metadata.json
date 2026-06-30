@@ -1,0 +1,17 @@
+{"properties": [
+	{
+	   "name": "alura.api.key",
+	   "type": "java.lang.String",
+	   "description": "A description for 'alura.api.key'"
+	 },
+  {
+    "name": "alura.api.base-url",
+    "type": "java.lang.String",
+    "description": "URL base da API Start."
+  },
+  {
+    "name": "springdoc.enable-native-support",
+    "type": "java.lang.String",
+    "description": "A description for 'springdoc.enable-native-support'"
+  }
+]}
