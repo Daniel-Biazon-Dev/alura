@@ -43,7 +43,9 @@ public class Member implements Serializable{
 
 	@Enumerated(EnumType.STRING)
 	private PerfilMembro perfil;
-
+	
+	
+	
 	@ManyToMany
 	@JoinTable(
 	    name = "tb_classe_membro",

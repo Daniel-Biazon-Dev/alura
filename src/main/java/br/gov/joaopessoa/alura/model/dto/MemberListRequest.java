@@ -1,16 +1,17 @@
 package br.gov.joaopessoa.alura.model.dto;
 
-import java.util.List;
-
-import br.gov.joaopessoa.alura.model.Member;
+import br.gov.joaopessoa.alura.projections.CustomTurmaByMembro;
 
 public record MemberListRequest(
-		List<MemberRequest> members) {
+		String codigo,
+		Long id,
+		String email,
+		String nome,
+		String perfil
+) {
 
-	public static MemberListRequest from(List<Member> listMember) {
-		return new MemberListRequest(
-				listMember.stream()
-				.map(MemberRequest::from)
-				.toList());
+	public MemberListRequest(CustomTurmaByMembro customTurmaByMembro) {
+		this(customTurmaByMembro.getClasses_codigo(), customTurmaByMembro.getId(), customTurmaByMembro.getEmail(), customTurmaByMembro.getNome(), customTurmaByMembro.getPerfil());
+		
 	}
 }

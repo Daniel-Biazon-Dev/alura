@@ -26,28 +26,28 @@ public class SchoolClassController {
 
 	private final SchoolClassService schoolClassService;
 
-	@PostMapping("/send")
+	@PostMapping("/enviar")
 	@Operation(summary = "Enviar todas as turmas", description = "Busca todas as turmas do banco e envia para a Alura")
 	public ResponseEntity<Void> enviarTodas() {
 		schoolClassService.enviarTodas();
 		return ResponseEntity.noContent().build();
 	}
 
-	@PutMapping("/{codigo}/send")
+	@PutMapping("/{codigo}/atualizar")
 	@Operation(summary = "Enviar turma por código", description = "Busca uma turma específica e envia para a Alura")
 	public ResponseEntity<Void> enviarPorCodigo(@PathVariable String codigo) {
 		schoolClassService.enviarPorCodigo(codigo);
 		return ResponseEntity.noContent().build();
 	}
 
-	@DeleteMapping("/{codigo}/send")
+	@DeleteMapping("/{codigo}/deletar")
 	@Operation(summary = "Deletar turma por código", description = "Deletar uma turma específica e envia para a Alura")
 	public ResponseEntity<Void> deletarPorCodigo(@PathVariable String codigo) {
 		schoolClassService.deletarPorCodigo(codigo);
 		return ResponseEntity.noContent().build();
 	}
 	
-	@GetMapping
+	@GetMapping("listar")
 	@Operation(summary = "Listar turmas", description = "Consulta as turmas cadastradas na Alura")
 	public ResponseEntity<AluraPageResponse<SchoolClassResponse>> listar() {
 		return ResponseEntity.ok(schoolClassService.listar());
