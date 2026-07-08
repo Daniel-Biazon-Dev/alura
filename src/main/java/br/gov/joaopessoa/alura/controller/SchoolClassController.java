@@ -36,7 +36,7 @@ public class SchoolClassController {
 	@PutMapping("/{codigo}/atualizar")
 	@Operation(summary = "Enviar turma por código", description = "Busca uma turma específica e envia para a Alura")
 	public ResponseEntity<Void> enviarPorCodigo(@PathVariable String codigo) {
-		schoolClassService.enviarPorCodigo(codigo);
+		schoolClassService.atualizarPorId(codigo);
 		return ResponseEntity.noContent().build();
 	}
 

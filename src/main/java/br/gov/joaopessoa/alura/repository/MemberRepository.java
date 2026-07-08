@@ -13,9 +13,7 @@ import br.gov.joaopessoa.alura.projections.CustomTurmaByMembro;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, String> {
-//	Page<Member> findByTurmasCodigo(String codigo, Pageable pageable);
-	
-	
+
 	@Query(nativeQuery = true, value =
 			"SELECT\n"
 			+ "	tb_classe_membro.classes_codigo, \n"

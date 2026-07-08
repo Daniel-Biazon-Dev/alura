@@ -1,14 +1,17 @@
 package br.gov.joaopessoa.alura.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
+import br.gov.joaopessoa.alura.exceptions.DatabaseException;
 import br.gov.joaopessoa.alura.exceptions.ResourceNotFoundException;
+import br.gov.joaopessoa.alura.integration.AuthURLSchoolClass;
 import br.gov.joaopessoa.alura.model.SchoolClass;
 import br.gov.joaopessoa.alura.model.dto.AluraPageResponse;
 import br.gov.joaopessoa.alura.model.dto.SchoolClassRequest;
@@ -23,26 +26,43 @@ public class SchoolClassService {
 	private static final String API_KEY_HEADER = "x-api-key";
 
 	private final RestClient aluraRestClient;
+	private final AuthURLSchoolClass authUrlSchoolClass;
 	private final SchoolClassRepository schoolClassRepository;
 
 	@Value("${alura.api.key}")
 	private String apiKey;
 
 
-	public void enviarTodas() {
-		schoolClassRepository.findAll().forEach(this::enviar);
+	public void enviarTodas() {		
+		List<SchoolClassRequest> classes = schoolClassRepository.findAll()
+        .stream()
+        .map(SchoolClassRequest::from)
+        .toList();
+		 authUrlSchoolClass.postUrl("/class", classes, "Turmas por Classes");
 	}
 
-	public void enviarPorCodigo(String codigo) {
+	public void atualizarPorId(String codigo) {
 
 		SchoolClass schoolClass = schoolClassRepository.findById(codigo).orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Turma não encontrada: " + codigo));
-		alterar(schoolClass);
+		
+		var url = "https://cursos.alura.com.br/start/api/v1/class/"+ codigo;
+		authUrlSchoolClass.putUrl(url, SchoolClassRequest.from(schoolClass), "Classe atualizado por id com sucesso!");
+
 	}
 	
 	public void deletarPorCodigo(String codigo) {
 
-		schoolClassRepository.findById(codigo).orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Turma não encontrada: " + codigo));
-		deletar(codigo);
+		if (!schoolClassRepository.existsById(codigo)) {
+			throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Aluno Especial não encontrado");
+		}
+		try {
+			schoolClassRepository.deleteById(codigo);
+		} catch (DatabaseException e) {
+			throw new DatabaseException("Falha de integridade referencial");
+		}
+		
+		var url = "https://cursos.alura.com.br/start/api/v1/class/"+ codigo;
+		authUrlSchoolClass.deleteUrl(url, "Deletado classe com sucesso!");
 	}
 	
 	
@@ -59,43 +79,15 @@ public class SchoolClassService {
 				});
 	}
 
-	private ResponseEntity<Void> enviar(SchoolClass schoolClass) {
-
-		return aluraRestClient.post().uri("/class").headers(headers -> {
-					if (StringUtils.hasText(apiKey)) {
-						headers.set(API_KEY_HEADER, apiKey);
-					}
-				})
-				.body(SchoolClassRequest.from(schoolClass))
-				.retrieve()
-				.toBodilessEntity();
-	}
-	
-	
-	private ResponseEntity<Void> alterar(SchoolClass schoolClass) {
-
-		return aluraRestClient.put()
-				.uri("/class")
-				.headers(headers -> {
-					if (StringUtils.hasText(apiKey)) {
-						headers.set(API_KEY_HEADER, apiKey);
-					}
-				})
-				.body(SchoolClassRequest.from(schoolClass))
-				.retrieve()
-				.toBodilessEntity();
-	}
-	
-	private ResponseEntity<Void> deletar(String codigo) {
-
-		return aluraRestClient.delete()
-				.uri("/class/"+codigo)
-				.headers(headers -> {
-					if (StringUtils.hasText(apiKey)) {
-						headers.set(API_KEY_HEADER, apiKey);
-					}
-				})
-				.retrieve()
-				.toBodilessEntity();
-	}
+//	private ResponseEntity<Void> enviar(SchoolClass schoolClass) {
+//
+//		return aluraRestClient.post().uri("/class").headers(headers -> {
+//					if (StringUtils.hasText(apiKey)) {
+//						headers.set(API_KEY_HEADER, apiKey);
+//					}
+//				})
+//				.body(SchoolClassRequest.from(schoolClass))
+//				.retrieve()
+//				.toBodilessEntity();
+//	}
 }

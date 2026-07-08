@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class AuthURLService {
+public class AuthURLMember {
 	
 	private static final String API_KEY_HEADER = "x-api-key";
 	
@@ -61,6 +61,38 @@ public class AuthURLService {
 					e.getMessage());
 		}
 	}
+	
+	public Map<String, Object> putUrl(String url,  MemberRequest member, String tipo) {
+		try {
+			
+			Map<String, Object> response = restClient
+					.put()
+					.uri(url)
+					.headers(headers -> {
+						if (StringUtils.hasText(apiKey)) {
+							headers.set(API_KEY_HEADER, apiKey);
+						}
+					})
+					.contentType(MediaType.APPLICATION_JSON)
+					.accept(MediaType.APPLICATION_JSON)
+					.body(member)
+					.retrieve()
+					.body(new ParameterizedTypeReference<Map<String, Object>>() {
+					});
+			
+			return Optional.ofNullable(response).orElse(Map.of("mensagem", "Resposta vazia da API de " + tipo));
+
+		} catch (RestClientResponseException e) {
+			return tratarErro("Erro de cliente na API externa", e.getStatusCode(), e.getResponseBodyAsString());
+		} catch (ResourceAccessException e) {
+			return Map.of("sucesso", false, "mensagem", "Não foi possível acessar a API externa (timeout/conexão).",
+					"detalhe", e.getMessage());
+		} catch (Exception e) {
+			return Map.of("sucesso", false, "mensagem", "Erro inesperado ao importar " + tipo + ".", "detalhe",
+					e.getMessage());
+		}
+	}
+	
 	
 	private Map<String, Object> tratarErro(String mensagem, HttpStatusCode status, String detalhe) {
 		try {

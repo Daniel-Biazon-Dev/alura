@@ -42,12 +42,12 @@ public class MemberController {
 
 	@GetMapping("/listar")
 	public ResponseEntity<AluraPageResponse<MemberResponse>> listar() {
-		return ResponseEntity.ok(memberService.listar());
+		return ResponseEntity.ok(memberService.listarTodos());
 	}
 	
 	
-	@GetMapping("/local")
+	@GetMapping("/localizarNoDB")
 	public ResponseEntity<List<MemberListRequest>> listarTodos() {
-		return ResponseEntity.status(HttpStatus.OK).body(memberService.listarTodos());
+		return ResponseEntity.status(HttpStatus.OK).body(memberService.listarTodosDB());
 	}
 }
