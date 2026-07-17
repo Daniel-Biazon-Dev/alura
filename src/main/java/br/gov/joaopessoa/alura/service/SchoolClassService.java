@@ -1,7 +1,5 @@
 package br.gov.joaopessoa.alura.service;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -33,17 +31,18 @@ public class SchoolClassService {
 	private String apiKey;
 
 
-	public void enviarTodas() {		
-		List<SchoolClassRequest> classes = schoolClassRepository.findAll()
-        .stream()
-        .map(SchoolClassRequest::from)
-        .toList();
-		 authUrlSchoolClass.postUrl("/class", classes, "Turmas por Classes");
+	public void enviarTodas() {
+		var url = "https://cursos.alura.com.br/start/api/v1/class";
+		schoolClassRepository.findAll()
+				.stream()
+				.map(SchoolClassRequest::from)
+				.forEach(schoolClass -> authUrlSchoolClass.postUrl(url, schoolClass, "Turma"));
 	}
-
+	
 	public void atualizarPorId(String codigo) {
 
-		SchoolClass schoolClass = schoolClassRepository.findById(codigo).orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Turma não encontrada: " + codigo));
+		SchoolClass schoolClass = schoolClassRepository.findById(codigo)
+				.orElseThrow(() -> new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Turma não encontrada: " + codigo));
 		
 		var url = "https://cursos.alura.com.br/start/api/v1/class/"+ codigo;
 		authUrlSchoolClass.putUrl(url, SchoolClassRequest.from(schoolClass), "Classe atualizado por id com sucesso!");
@@ -53,7 +52,7 @@ public class SchoolClassService {
 	public void deletarPorCodigo(String codigo) {
 
 		if (!schoolClassRepository.existsById(codigo)) {
-			throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Aluno Especial não encontrado");
+			throw new ResourceNotFoundException(HttpStatus.NOT_FOUND, "Turma não encontrada");
 		}
 		try {
 			schoolClassRepository.deleteById(codigo);

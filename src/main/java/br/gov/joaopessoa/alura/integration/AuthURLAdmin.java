@@ -1,6 +1,5 @@
 package br.gov.joaopessoa.alura.integration;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -8,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.ResourceAccessException;
@@ -17,12 +17,14 @@ import org.springframework.web.client.RestClientResponseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.gov.joaopessoa.alura.exceptions.BadRequestException;
-import br.gov.joaopessoa.alura.model.dto.MemberRequest;
+import br.gov.joaopessoa.alura.model.dto.AdminRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
-public class AuthURLMember {
+public class AuthURLAdmin {
 	
 	private static final String API_KEY_HEADER = "x-api-key";
 	
@@ -32,10 +34,16 @@ public class AuthURLMember {
 	@Value("${alura.api.key}")
 	private String apiKey;
 
-	public Map<String, Object> postUrl(String url,  List<MemberRequest> members, String tipo) {
-		try {
+	public ResponseEntity<String> postUrl(String url,  AdminRequest admins, String tipo) {
+		if(admins == null) {
+			throw new BadRequestException("Nenhuma admin encontrado para envio");
+		}
+		
+		try {	
 			
-			Map<String, Object> response = restClient
+			log.info("Iniciando envio da admins {} para Alura", admins.id());
+			
+			ResponseEntity<String> response = restClient
 					.post()
 					.uri(url)
 					.headers(headers -> {
@@ -45,25 +53,35 @@ public class AuthURLMember {
 					})
 					.contentType(MediaType.APPLICATION_JSON)
 					.accept(MediaType.APPLICATION_JSON)
-					.body(members)
+					.body(admins)
 					.retrieve()
-					.body(new ParameterizedTypeReference<Map<String, Object>>() {
-					});
+					.toEntity(String.class);
 
-			return Optional.ofNullable(response).orElse(Map.of("mensagem", "Resposta vazia da API de " + tipo));
+			log.info("Status retorno Alura: {}", response.getStatusCode());
+
+			if (response.getBody() != null && !response.getBody().isBlank()) {
+				log.info("Resposta Alura: {}", response.getBody());
+			}
+			return response;
 
 		} catch (RestClientResponseException e) {
-			return tratarErro("Erro de cliente na API externa", e.getStatusCode(), e.getResponseBodyAsString());
-		} catch (ResourceAccessException e) {
-			return Map.of("sucesso", false, "mensagem", "Não foi possível acessar a API externa (timeout/conexão).",
-					"detalhe", e.getMessage());
+			log.error(
+					"Erro ao enviar admin {} para Alura. Status: {}. Resposta: {}. Payload: {}",
+					admins.id(),
+					e.getStatusCode(),
+					e.getResponseBodyAsString(),
+					admins,
+					e);
+			throw new BadRequestException("Erro ao enviar turma " + admins.id()
+					+ " para Alura. Status: " + e.getStatusCode()
+					+ ". Resposta: " + e.getResponseBodyAsString());
 		} catch (Exception e) {
-			return Map.of("sucesso", false, "mensagem", "Erro inesperado ao importar " + tipo + ".", "detalhe",
-					e.getMessage());
+			log.error("Falha na integracao com a Alura", e);
+			throw new BadRequestException("Falha ao integrar com a Alura: " + e.getMessage());
 		}
 	}
 	
-	public Map<String, Object> putUrl(String url,  MemberRequest member, String tipo) {
+	public Map<String, Object> putUrl(String url,  AdminRequest  adminRequest, String tipo) {
 		try {
 			
 			Map<String, Object> response = restClient
@@ -76,7 +94,7 @@ public class AuthURLMember {
 					})
 					.contentType(MediaType.APPLICATION_JSON)
 					.accept(MediaType.APPLICATION_JSON)
-					.body(member)
+					.body(adminRequest)
 					.retrieve()
 					.body(new ParameterizedTypeReference<Map<String, Object>>() {
 					});
@@ -93,38 +111,6 @@ public class AuthURLMember {
 					e.getMessage());
 		}
 	}
-	
-	public Map<String, Object> putPorClassUrl(String url,  MemberRequest member, String tipo) {
-		try {
-			
-			Map<String, Object> response = restClient
-					.put()
-					.uri(url)
-					.headers(headers -> {
-						if (StringUtils.hasText(apiKey)) {
-							headers.set(API_KEY_HEADER, apiKey);
-						}
-					})
-					.contentType(MediaType.APPLICATION_JSON)
-					.accept(MediaType.APPLICATION_JSON)
-					.body(member)
-					.retrieve()
-					.body(new ParameterizedTypeReference<Map<String, Object>>() {
-					});
-			
-			return Optional.ofNullable(response).orElse(Map.of("mensagem", "Resposta vazia da API de " + tipo));
-
-		} catch (RestClientResponseException e) {
-			return tratarErro("Erro de cliente na API externa", e.getStatusCode(), e.getResponseBodyAsString());
-		} catch (ResourceAccessException e) {
-			return Map.of("sucesso", false, "mensagem", "Não foi possível acessar a API externa (timeout/conexão).",
-					"detalhe", e.getMessage());
-		} catch (Exception e) {
-			return Map.of("sucesso", false, "mensagem", "Erro inesperado ao importar " + tipo + ".", "detalhe",
-					e.getMessage());
-		}
-	}
-	
 	
 	public Map<String, Object> deleteUrl(String url,  String tipo) {
 		try {
@@ -152,47 +138,6 @@ public class AuthURLMember {
 		} catch (Exception e) {
 			return Map.of("sucesso", false, "mensagem", "Erro inesperado ao importar " + tipo + ".", "detalhe",
 					e.getMessage());
-		}
-	}
-	
-	public <T> T listaMembros(String url, String tipo, ParameterizedTypeReference<T> responseType) {
-		if (!StringUtils.hasText(url)) {
-			throw new BadRequestException("URL de consulta de " + tipo + " nao informada.");
-		}
-		if (responseType == null) {
-			throw new BadRequestException("Tipo de resposta de " + tipo + " nao informado.");
-		}
-
-		try {
-			T response = restClient
-					.get()
-					.uri(url)
-					.headers(headers -> {
-						if (StringUtils.hasText(apiKey)) {
-							headers.set(API_KEY_HEADER, apiKey);
-						}
-					})
-					.accept(MediaType.APPLICATION_JSON)
-					.retrieve()
-					.body(responseType);
-
-			if (response == null) {
-				throw new BadRequestException("Resposta vazia da API de " + tipo + ".");
-			}
-
-			return response;
-
-		} catch (RestClientResponseException e) {
-			throw new BadRequestException("Erro ao consultar " + tipo
-					+ " na API da Alura. Status: " + e.getStatusCode()
-					+ ". Resposta: " + e.getResponseBodyAsString());
-		} catch (ResourceAccessException e) {
-			throw new BadRequestException("Nao foi possivel acessar a API da Alura para consultar "
-					+ tipo + ": " + e.getMessage());
-		} catch (BadRequestException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new BadRequestException("Erro inesperado ao consultar " + tipo + ": " + e.getMessage());
 		}
 	}
 	

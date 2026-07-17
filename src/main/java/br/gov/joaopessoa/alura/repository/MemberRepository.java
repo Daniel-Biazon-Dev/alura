@@ -2,8 +2,8 @@ package br.gov.joaopessoa.alura.repository;
 
 
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -24,5 +24,5 @@ public interface MemberRepository extends JpaRepository<Member, String> {
 			+ "FROM\n"
 			+ "	tb_classe_membro INNER JOIN tb_membro	ON \n"
 			+ "	tb_classe_membro.membro_id = tb_membro.id")
-	List<CustomTurmaByMembro> selecaoCustomTurmaByMembro();
+	Page<CustomTurmaByMembro> selecaoCustomTurmaByMembro(Pageable pageable);
 }

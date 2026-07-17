@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import br.gov.joaopessoa.alura.exceptions.BadRequestException;
 import br.gov.joaopessoa.alura.exceptions.ResourceNotFoundException;
 import br.gov.joaopessoa.alura.model.dto.CustomError;
 import br.gov.joaopessoa.alura.model.dto.ValidationError;
@@ -17,6 +18,16 @@ import jakarta.servlet.http.HttpServletRequest;
 @ControllerAdvice
 public class ControllerExceptionHandler {
 
+	@ExceptionHandler(BadRequestException.class)
+	public ResponseEntity<CustomError> badRequest(BadRequestException e, 
+			HttpServletRequest request){
+		
+		HttpStatus status = HttpStatus.BAD_REQUEST;
+		CustomError err = new CustomError(Instant.now(), status.value(), e.getMessage(), request.getRequestURI());
+		
+		return ResponseEntity.status(status).body(err);
+	}
+	
 	@ExceptionHandler(ResourceNotFoundException.class)
 	public ResponseEntity<CustomError> resourceNotFound(ResourceNotFoundException e, 
 			HttpServletRequest request){

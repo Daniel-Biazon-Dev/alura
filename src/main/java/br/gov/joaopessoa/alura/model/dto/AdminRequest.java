@@ -6,6 +6,13 @@ public record AdminRequest(
 		String id,
 		String nome,
 		String email) {
+	
+	public AdminRequest (Admin admin) {
+		this(
+				admin.getId(),
+				admin.getNome(),
+				admin.getEmail());
+	}
 
 	public static AdminRequest from(Admin admin) {
 		return new AdminRequest(

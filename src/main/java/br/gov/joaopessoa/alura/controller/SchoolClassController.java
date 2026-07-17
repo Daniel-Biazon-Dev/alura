@@ -3,7 +3,6 @@ package br.gov.joaopessoa.alura.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,21 +32,21 @@ public class SchoolClassController {
 		return ResponseEntity.noContent().build();
 	}
 
-	@PutMapping("/{codigo}/atualizar")
+	@PutMapping("/atualizar")
 	@Operation(summary = "Enviar turma por código", description = "Busca uma turma específica e envia para a Alura")
-	public ResponseEntity<Void> enviarPorCodigo(@PathVariable String codigo) {
+	public ResponseEntity<Void> enviarPorCodigo(String codigo) {
 		schoolClassService.atualizarPorId(codigo);
 		return ResponseEntity.noContent().build();
 	}
 
-	@DeleteMapping("/{codigo}/deletar")
+	@DeleteMapping("/deletar")
 	@Operation(summary = "Deletar turma por código", description = "Deletar uma turma específica e envia para a Alura")
-	public ResponseEntity<Void> deletarPorCodigo(@PathVariable String codigo) {
+	public ResponseEntity<Void> deletarPorCodigo(String codigo) {
 		schoolClassService.deletarPorCodigo(codigo);
 		return ResponseEntity.noContent().build();
 	}
 	
-	@GetMapping("listar")
+	@GetMapping("/listar")
 	@Operation(summary = "Listar turmas", description = "Consulta as turmas cadastradas na Alura")
 	public ResponseEntity<AluraPageResponse<SchoolClassResponse>> listar() {
 		return ResponseEntity.ok(schoolClassService.listar());
